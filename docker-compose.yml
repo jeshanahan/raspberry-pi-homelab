@@ -1,0 +1,194 @@
+services:
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+
+    cap_add:
+      - NET_ADMIN
+
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${PROTON_WG_PRIVATE_KEY}
+      - SERVER_COUNTRIES=United States
+      - PORT_FORWARD_ONLY=on
+      - VPN_PORT_FORWARDING=on
+      - TZ=America/Chicago
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c '/gluetun/qbit-port.sh {{PORT}} {{VPN_INTERFACE}}'
+      - VPN_PORT_FORWARDING_DOWN_COMMAND=/bin/sh -c 'wget -O- -nv --retry-connrefused --post-data "json={\"listen_port\":0,\"current_network_interface\":\"lo\"}" http://127.0.0.1:8080/api/v2/app/setPreferences'
+
+    volumes:
+      - /srv/media-stack/gluetun:/gluetun
+
+    ports:
+      # qBittorrent Web UI
+      - "8080:8080"
+
+    restart: unless-stopped
+
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+
+    network_mode: "service:gluetun"
+
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - WEBUI_PORT=8080
+
+    volumes:
+      - /srv/media-stack/qbittorrent:/config
+
+      - type: bind
+        source: /mnt/media/data
+        target: /data
+        bind:
+          create_host_path: false
+
+    restart: unless-stopped
+
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+
+    user: "1000:1000"
+
+    ports:
+      - "8096:8096/tcp"
+      - "7359:7359/udp"
+
+    volumes:
+      - /srv/media-stack/jellyfin/config:/config
+      - /srv/media-stack/jellyfin/cache:/cache
+
+      - type: bind
+        source: /mnt/media/appdata/jellyfin/subtitles
+        target: /config/data/subtitles
+        bind:
+          create_host_path: false
+      
+      - type: bind
+        source: /mnt/media/data/media
+        target: /media
+        read_only: true
+        bind:
+          create_host_path: false
+
+    restart: unless-stopped
+    
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+
+    volumes:
+      - /srv/media-stack/radarr:/config
+
+      - type: bind
+        source: /mnt/media/data
+        target: /data
+        bind:
+          create_host_path: false
+
+    ports:
+      - "7878:7878"
+
+    restart: unless-stopped
+
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+
+    volumes:
+      - /srv/media-stack/sonarr:/config
+
+      - type: bind
+        source: /mnt/media/data
+        target: /data
+        bind:
+          create_host_path: false
+
+    ports:
+      - "8989:8989"
+
+    restart: unless-stopped
+
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+
+    volumes:
+      - /srv/media-stack/prowlarr:/config
+
+    ports:
+      - "9696:9696"
+
+    restart: unless-stopped
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=America/Chicago
+      - PORT=5055 
+    ports:
+      - "5055:5055"
+      
+    volumes:
+      - /srv/media-stack/seerr:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /srv/media-stack/bazarr:/config
+      - type: bind
+        source: /mnt/media/data
+        target: /data
+        bind:
+          create_host_path: false
+    ports:
+      - "6767:6767"
+    restart: unless-stopped
