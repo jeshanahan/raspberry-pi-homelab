@@ -1,2 +1,2 @@
 # raspberry-pi-homelab
-Documenting my raspberrypi homelab projects
+Documenting my Raspberry Pi homelab projects
