@@ -1,7 +1,5 @@
-# raspberry-pi-homelab
-Documenting my Raspberry Pi homelab projects.
-
 # Raspberry Pi Homelab
+Documenting my Raspberry Pi homelab project.
 
 A self-hosted Linux homelab built on a Raspberry Pi 4 using Ubuntu Server, Docker, and Docker Compose.
 
@@ -13,7 +11,7 @@ The server hosts a containerized media automation stack built around Jellyfin. M
 
 Torrent traffic is isolated through a Gluetun container connected to ProtonVPN using WireGuard.
 
-Remote administration is provided through Tailscale, allowing secure access to the server without exposing administrative services directly to the public Internet. This makes it best for personal use.
+Remote administration is provided through Tailscale, allowing secure access to the server without exposing administrative services directly to the public Internet, well suited for personal remote access.
 
 ## Hardware
 
@@ -71,3 +69,43 @@ Remote administration is provided through Tailscale, allowing secure access to t
                   |                       |
              Local Network             Tailscale
            rasp4serv.local             rasp4serv
+
+
+```
+[Detailed architecture documentation](docs/architecture.md)
+
+
+## Key Features
+
+- Containerized services
+- Automated media pipeline
+- VPN-isolated torrent traffic
+- Remote access through Tailscale
+- Persistent external storage
+- Subtitle automation
+- Storage safeguards
+
+## Challenges Encountered
+
+- External drive mount failures
+- USB instability with the external Seagate drive
+- Accidental SD-card storage exhaustion
+- Gluetun health-check failures
+- mDNS routing across Ethernet and Wi-Fi
+
+[Full troubleshooting notes](docs/troubleshooting.md)
+
+## Full Documentation
+
+- [Architecture](docs/architecture.md)
+- [Storage](docs/storage.md)
+- [Networking](docs/networking.md)
+- [Troubleshooting](docs/troubleshooting.md)
+
+## Future Improvements
+
+- Monitoring
+- Backups
+- SMART monitoring
+- Health-check automation
+- Pi-hole
